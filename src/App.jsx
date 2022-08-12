@@ -1,75 +1,65 @@
 import { useEffect, useState } from "react";
 import uuid from "react-uuid";
 import "./App.css";
-import Main from "./main/Main";
-import Sidebar from "./sidebar/Sidebar";
+import Workspace from "./components/Workspace";
+import Sidebar from "./components/Sidebar";
 import Dexie from "dexie";
+import "antd/dist/antd.css";
+import { Layout } from "antd";
+import NotesContext from "./context/Context";
 
 const filterPosts = (notes, text) => {
   if (!text) {
-      return notes;
+    return notes;
   }
 
   return notes.filter((note) => {
-      const noteTitle = note.title.toLowerCase();
-      const noteBody = note.body.toLowerCase();
-      return noteTitle.includes(text)||noteBody.includes(text);
+    const noteTitle = note.title.toLowerCase();
+    const noteBody = note.body.toLowerCase();
+    const loweredText = text.toLowerCase();
+    return noteTitle.includes(loweredText) || noteBody.includes(loweredText);
   });
 };
 
-function App() {
-    // database 
-    const db = new Dexie("NotesStorage");
-    db.version(1).stores({
-        notesstore: "++id, title, body, lastModified"
-    })
-  
+const App = ({ children }) => {
+  const db = new Dexie("NotesStorage");
+  db.version(1).stores({
+    notesstore: "++id, title, body, lastModified",
+  });
 
-
-const [modalIsOpen, setModalIsOpen] = useState(false);
-const [text, setText] = useState(false);
-
-
+  const [text, setText] = useState(false);
   const [notes, setNotes] = useState([]);
+  const [activeNote, setActiveNote] = useState(false);
+  const filteredPosts = filterPosts(notes, text);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
-
-
-
-
-useEffect(() => {
-    const getPosts = async() => {
-        let allNotes = await db.notesstore.toArray();
-        setNotes(allNotes);
-    }
+  useEffect(() => {
+    const getPosts = async () => {
+      let allNotes = await db.notesstore.toArray();
+      setNotes(allNotes);
+    };
     getPosts();
-}, [])
+  }, []);
 
+  const onAddNote = () => {
+    const newNote = {
+      id: uuid(),
+      title: "Untitled Note",
+      body: "",
+      lastModified: Date.now(),
+    };
 
-	const onAddNote = () => {
-        const newNote = {
-          id: uuid(),
-          title: "Untitled Note",
-          body: "",
-          lastModified: Date.now(),
-        };
-          
-        db.notesstore.add(newNote).then(async() => {
-            setNotes([newNote, ...notes]);
-            setActiveNote(newNote.id); 
-        });    
-        
-    }
+    db.notesstore.add(newNote).then(async () => {
+      setNotes([newNote, ...notes]);
+      setActiveNote(newNote.id);
+    });
+  };
 
-
-   const [activeNote, setActiveNote] = useState(false);
-   const filteredPosts = filterPosts(notes, text);
-
-  const onDeleteNote = async(noteId) => {
-    setModalIsOpen(false);
+  const onDeleteNote = async (noteId) => {
+    setIsModalVisible(false);
     db.notesstore.delete(noteId);
     setNotes(notes.filter(({ id }) => id !== noteId));
   };
-
 
   const onUpdateNote = (updatedNote) => {
     const updatedNotesArr = notes.map((note) => {
@@ -87,29 +77,50 @@ useEffect(() => {
     return notes.find(({ id }) => id === activeNote);
   };
 
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleOk = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
 
 
-
-
-
+  const onEditField = (field, value) => {
+    onUpdateNote({
+      ...getActiveNote(),
+      [field]: value,
+      lastModified: Date.now(),
+    });
+  };
 
   return (
-    <div className="App">
-      <Sidebar
-        onAddNote={onAddNote}
-        onDeleteNote={onDeleteNote}
-        activeNote={activeNote}
-        setActiveNote={setActiveNote}
-        modalIsOpen = {modalIsOpen}
-        setModalIsOpen={setModalIsOpen}
-        text={text}
-        setText={setText}
-        filteredPosts={filteredPosts}
-      />
-      <Main activeNote={getActiveNote()} onUpdateNote={onUpdateNote} />
-    </div>
+    <NotesContext.Provider value={{ 
+    activeNote,
+    getActiveNote,
+    onEditField, 
+    setActiveNote, 
+    text, 
+    setText, 
+    onAddNote,
+    onDeleteNote,
+    showModal,
+    handleOk,
+    handleCancel,
+    filteredPosts,
+    isModalVisible}}>
+      <Layout>
+        <Sidebar/>
+         <Workspace
+          activeNote={getActiveNote()}
+        />
+      </Layout>
+    </NotesContext.Provider>
   );
-}
+};
 
 export default App;
-
