@@ -27,12 +27,12 @@ const App = ({ children }) => {
     notesstore: "++id, title, body, lastModified",
   });
 
-  const [text, setText] = useState(false);
+  const [text, setText] = useState("");
   const [notes, setNotes] = useState([]);
   const [activeNote, setActiveNote] = useState(false);
   const filteredPosts = filterPosts(notes, text);
   const [isModalVisible, setIsModalVisible] = useState(false);
-
+  const [isFooterVisible, setIsFooterVisible] = useState(false);
   useEffect(() => {
     const getPosts = async () => {
       let allNotes = await db.notesstore.toArray();
@@ -54,13 +54,6 @@ const App = ({ children }) => {
       setActiveNote(newNote.id);
     });
   };
-
-  const onDeleteNote = async (noteId) => {
-    setIsModalVisible(false);
-    db.notesstore.delete(noteId);
-    setNotes(notes.filter(({ id }) => id !== noteId));
-  };
-
   const onUpdateNote = (updatedNote) => {
     const updatedNotesArr = notes.map((note) => {
       if (note.id === updatedNote.id) {
@@ -77,46 +70,50 @@ const App = ({ children }) => {
     return notes.find(({ id }) => id === activeNote);
   };
 
+  const showFooter = () => {
+    setIsFooterVisible(true);
+  };
+  const handleFooterClose = () => {
+    setIsFooterVisible(false);
+  };
+
   const showModal = () => {
     setIsModalVisible(true);
   };
 
   const handleOk = () => {
     setIsModalVisible(false);
+    db.notesstore.delete(getActiveNote().id);
+    setNotes(notes.filter(({ id }) => id !== getActiveNote().id));
+    
   };
 
   const handleCancel = () => {
     setIsModalVisible(false);
   };
 
-
-  const onEditField = (field, value) => {
-    onUpdateNote({
-      ...getActiveNote(),
-      [field]: value,
-      lastModified: Date.now(),
-    });
-  };
-
   return (
     <NotesContext.Provider value={{ 
+    getActiveNote, 
     activeNote,
-    getActiveNote,
-    onEditField, 
     setActiveNote, 
     text, 
     setText, 
+    showFooter,
     onAddNote,
-    onDeleteNote,
     showModal,
     handleOk,
     handleCancel,
     filteredPosts,
+    isFooterVisible, 
+    setIsFooterVisible,
+    handleFooterClose,
     isModalVisible}}>
       <Layout>
         <Sidebar/>
          <Workspace
           activeNote={getActiveNote()}
+          onUpdateNote={onUpdateNote}
         />
       </Layout>
     </NotesContext.Provider>

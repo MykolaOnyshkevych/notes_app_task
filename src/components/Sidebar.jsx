@@ -10,10 +10,10 @@ const Sidebar = () => {
       {(context) => (
     <div className="app-sidebar">
     <Sider>
-      <Header>
-        <Button onClick={context.onAddNote}>Add Note</Button>
-      </Header>
       <SearchBar/>
+          <Header>
+            <Button onClick={context.onAddNote}>Add Note</Button>
+          </Header>
       <Content>
       <div className="app-sidebar-notes">
         {context.filteredPosts.sort(

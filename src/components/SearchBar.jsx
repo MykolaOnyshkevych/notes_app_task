@@ -1,9 +1,11 @@
 import NotesContext from "../context/Context";
+import "../App.css";
 const SearchBar = () => {
   return (
+    <div class="search-bar">
     <NotesContext.Consumer>
       {(context) => (
-        <input
+        <input class="search-bar-input"
           value={context.text}
           onInput={(e) => context.setText(e.target.value)}
           type="text"
@@ -11,6 +13,7 @@ const SearchBar = () => {
         />
       )}
     </NotesContext.Consumer>
+    </div>
   );
 };
 export default SearchBar;
