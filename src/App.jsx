@@ -33,13 +33,6 @@ const App = ({ children }) => {
   const filteredPosts = filterPosts(notes, text);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
-  useEffect(() => {
-    const getPosts = async () => {
-      let allNotes = await db.notesstore.toArray();
-      setNotes(allNotes);
-    };
-    getPosts();
-  }, []);
 
   const onAddNote = () => {
     const newNote = {
@@ -85,36 +78,42 @@ const App = ({ children }) => {
     setIsModalVisible(false);
     db.notesstore.delete(getActiveNote().id);
     setNotes(notes.filter(({ id }) => id !== getActiveNote().id));
-    
   };
 
   const handleCancel = () => {
     setIsModalVisible(false);
   };
 
+  useEffect(() => {
+    const getPosts = async () => {
+      let allNotes = await db.notesstore.toArray();
+      setNotes(allNotes);
+    };
+    getPosts();
+  }, []);
   return (
-    <NotesContext.Provider value={{ 
-    getActiveNote, 
-    activeNote,
-    setActiveNote, 
-    text, 
-    setText, 
-    showFooter,
-    onAddNote,
-    showModal,
-    handleOk,
-    handleCancel,
-    filteredPosts,
-    isFooterVisible, 
-    setIsFooterVisible,
-    handleFooterClose,
-    isModalVisible}}>
+    <NotesContext.Provider
+      value={{
+        activeNote: getActiveNote(),
+        setActiveNote,
+        text,
+        setText,
+        showFooter,
+        onAddNote,
+        showModal,
+        handleOk,
+        onUpdateNote,
+        handleCancel,
+        filteredPosts,
+        isFooterVisible,
+        setIsFooterVisible,
+        handleFooterClose,
+        isModalVisible,
+      }}
+    >
       <Layout>
-        <Sidebar/>
-         <Workspace
-          activeNote={getActiveNote()}
-          onUpdateNote={onUpdateNote}
-        />
+        <Sidebar />
+        <Workspace />
       </Layout>
     </NotesContext.Provider>
   );
