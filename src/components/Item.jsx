@@ -5,7 +5,7 @@ const Item = ({ note }) => {
       {(context) => (
            
         <div
-          className={`app-sidebar-note ${
+          className={`app-sisdfghmdebar-note ${
             note.id === context.activeNote && "active"
           }`}
           onClick={() => context.setActiveNote(note.id)}
